@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Oréal Smart Routine & Product Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Helvetica:wght@300;400;500;600;700&family=Futura:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            background: linear-gradient(135deg, #fafafa 0%, #ffffff 50%, #f8f8f8 100%);
+            color: #2c2c2c;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: #e31e24;
+        }
+
+        .logo {
+            font-family: 'Futura', 'Helvetica', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: #2c2c2c;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #666666;
+            letter-spacing: 0.05em;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            background: #ffffff;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            scroll-behavior: smooth;
+            background: #ffffff;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f5f5f5;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 25px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 18px 24px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            position: relative;
+            font-weight: 400;
+        }
+
+        .message.user .message-content {
+            background: #2c2c2c;
+            color: #ffffff;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 3px 12px rgba(44, 44, 44, 0.15);
+        }
+
+        .message.assistant .message-content {
+            background: #f8f9fa;
+            color: #2c2c2c;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .current-question {
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            padding: 14px 20px;
+            margin: 15px 30px;
+            border-radius: 10px;
+            font-style: italic;
+            color: #666666;
+            font-size: 0.9rem;
+            border-left: 3px solid #e31e24;
+        }
+
+        .input-container {
+            padding: 25px 30px;
+            background: #ffffff;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-form {
+            display: flex;
+            gap: 15px;
+            max-width: 100%;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            background: #ffffff;
+            color: #2c2c2c;
+            font-size: 1rem;
+            font-family: 'Helvetica', Arial, sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #e31e24;
+            box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
+        }
+
+        .message-input::placeholder {
+            color: #999999;
+        }
+
+        .send-button {
+            padding: 16px 28px;
+            background: #e31e24;
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 90px;
+        }
+
+        .send-button:hover {
+            background: #c41e24;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(227, 30, 36, 0.25);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .footer-content {
+            font-size: 0.85rem;
+            color: #666666;
+            margin-bottom: 10px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+        }
+
+        .footer-links a {
+            color: #666666;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #e31e24;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 18px 24px;
+            margin: 10px 0;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #ccc;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.2rem;
+            }
+            
+            .tagline {
+                font-size: 1rem;
+            }
+            
+            .message-content {
+                max-width: 85%;
+                font-size: 0.9rem;
+            }
+            
+            .input-container {
+                padding: 15px;
+            }
+            
+            .message-input {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">L'ORÉAL</div>
+        <div class="tagline">Smart Routine & Product Advisor</div>
+    </header>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-content">
+                    Welcome to L'Oréal's Smart Beauty Advisor! 🌟 I'm here to help you discover the perfect products and routines tailored to your unique beauty needs. Whether you're looking for skincare solutions, makeup recommendations, or hair care advice, I'll guide you through L'Oréal's extensive catalog with personalized suggestions. What can I help you with today?
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="current-question" id="currentQuestion" style="display: none;"></div>
+
+        <div class="input-container">
+            <form class="input-form" id="messageForm">
+                <input 
+                    type="text" 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="Ask me about any L'Oréal product or routine..."
+                    autocomplete="off"
+                >
+                <button type="submit" class="send-button" id="sendButton">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">© 2025 L'Oréal. All rights reserved.</div>
+        <div class="footer-links">
+            <a href="#" onclick="return false;">Privacy Policy</a>
+            <a href="#" onclick="return false;">Terms of Use</a>
+            <a href="#" onclick="return false;">Contact</a>
+        </div>
+    </footer>
+
+    <script>
+        class LorealChatbot {
+            constructor() {
+                this.messageForm = document.getElementById('messageForm');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.chatMessages = document.getElementById('chatMessages');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                this.currentQuestion = document.getElementById('currentQuestion');
+                
+                // Store conversation history for context
+                this.conversationHistory = [{
+                    role: "system",
+                    content: `You are L'Oréal's Smart Beauty Advisor, an expert AI assistant specializing exclusively in L'Oréal products, beauty routines, and skincare/haircare/makeup recommendations. 
+
+Your expertise covers:
+- All L'Oréal product lines (skincare, makeup, haircare, fragrance)
+- Personalized beauty routines and regimens
+- Product recommendations based on skin type, concerns, and preferences
+- Application techniques and beauty tips
+- Ingredient benefits and product comparisons within L'Oréal's catalog
+
+Guidelines:
+- Only discuss L'Oréal products, beauty routines, and related beauty topics
+- Provide detailed, helpful recommendations with specific product names when possible
+- Ask follow-up questions to better understand the user's needs
+- Be enthusiastic, knowledgeable, and professional
+- If asked about non-L'Oréal topics, politely redirect the conversation back to L'Oréal products and beauty
+- Remember user preferences and context throughout the conversation
+- Use emojis occasionally to make responses more engaging
+
+Always stay focused on helping users discover the perfect L'Oréal products for their unique beauty needs.`
+                }];
+                
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                this.messageForm.addEventListener('submit', (e) => this.handleSubmit(e));
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.handleSubmit(e);
+                    }
+                });
+            }
+
+            async handleSubmit(e) {
+                e.preventDefault();
+                
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+
+                // Disable input while processing
+                this.setInputState(false);
+                
+                // Display user message
+                this.addMessage(message, 'user');
+                
+                // Show current question
+                this.showCurrentQuestion(message);
+                
+                // Clear input
+                this.messageInput.value = '';
+                
+                // Show typing indicator
+                this.showTypingIndicator();
+                
+                try {
+                    // Add user message to conversation history
+                    this.conversationHistory.push({
+                        role: "user",
+                        content: message
+                    });
+
+                    // Send request to Cloudflare Worker
+                    const response = await this.sendToCloudflareWorker(this.conversationHistory);
+                    
+                    // Hide typing indicator
+                    this.hideTypingIndicator();
+                    
+                    // Add assistant response to conversation history
+                    this.conversationHistory.push({
+                        role: "assistant",
+                        content: response
+                    });
+                    
+                    // Display assistant response
+                    this.addMessage(response, 'assistant');
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.hideTypingIndicator();
+                    this.addMessage('I apologize, but I\'m experiencing technical difficulties. Please try again in a moment. 🛠️', 'assistant');
+                } finally {
+                    // Re-enable input
+                    this.setInputState(true);
+                    this.messageInput.focus();
+                }
+            }
+
+            async sendToCloudflareWorker(messages) {
+                // Replace with your actual Cloudflare Worker URL
+                const WORKER_URL = 'https://project-8-loreal-chatbot.nadiaswansey.workers.dev';
+                
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: messages,
+                        model: "gpt-3.5-turbo",
+                        max_tokens: 500,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            }
+
+            addMessage(content, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+                
+                messageDiv.appendChild(messageContent);
+                this.chatMessages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            showCurrentQuestion(question) {
+                this.currentQuestion.textContent = `You: ${question}`;
+                this.currentQuestion.style.display = 'block';
+            }
+
+            showTypingIndicator() {
+                this.typingIndicator.style.display = 'block';
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            hideTypingIndicator() {
+                this.typingIndicator.style.display = 'none';
+            }
+
+            setInputState(enabled) {
+                this.messageInput.disabled = !enabled;
+                this.sendButton.disabled = !enabled;
+                
+                if (enabled) {
+                    this.sendButton.textContent = 'Send';
+                } else {
+                    this.sendButton.textContent = '...';
+                }
+            }
+        }
+
+        // Initialize the chatbot when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new LorealChatbot();
+        });
+    </script>
+</body>
+</html>
